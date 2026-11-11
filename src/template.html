@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Earth – 3D EGM96 geoid</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--blue:#000091;--blue-hover:#1212ff;--on-blue:#fff;--bg:#fff;--bg-alt:#f6f6f6;--text:#3a3a3a;--title:#161616;--line:#ddd;--line-strong:#929292;--focus:#0a76f6;--link:#000091;--font:'Public Sans',Arial,sans-serif;color-scheme:light}
+html[data-theme=dark]{--blue:#8585f6;--blue-hover:#b1b1f9;--on-blue:#161616;--bg:#161616;--bg-alt:#1e1e1e;--text:#cecece;--title:#fff;--line:#3a3a3a;--line-strong:#777;--link:#8585f6;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;font-family:var(--font);color:var(--text);background:var(--bg);overflow:hidden}
+body{display:flex;flex-direction:column;height:100dvh;font-size:.875rem;line-height:1.5}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+button{font-family:inherit}
+/* header: utility row + brand row, like an institutional site */
+.util{display:flex;justify-content:flex-end;gap:18px;padding:6px 16px;padding-top:max(6px,env(safe-area-inset-top));background:var(--bg-alt);border-bottom:1px solid var(--line);font-size:.75rem}
+.util button{background:none;border:0;color:var(--text);cursor:pointer;padding:2px 0;font-size:.75rem;display:flex;gap:6px;align-items:center}
+.util button:hover{color:var(--blue)}
+header{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid var(--line);background:var(--bg);flex:none}
+header svg{flex:none;color:var(--blue)}
+header .brand{margin-right:auto;min-width:0}
+header .brand b{display:block;font-weight:700;font-size:1.05rem;line-height:1.15;color:var(--title);letter-spacing:.01em}
+header .brand span{display:block;font-size:.72rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.btn{font:500 .875rem var(--font);background:var(--blue);color:var(--on-blue);border:1px solid var(--blue);border-radius:0;padding:7px 16px;cursor:pointer}
+.btn:hover{background:var(--blue-hover);border-color:var(--blue-hover)}
+.btn.sec{background:transparent;color:var(--blue)}
+.btn.sec:hover{background:color-mix(in srgb,var(--blue) 12%,transparent)}
+#stage{position:relative;flex:1;min-height:0;min-width:0;background:radial-gradient(ellipse at 50% 42%,#162040 0%,#0b1020 68%,#060913 100%);overflow:hidden;touch-action:none}
+#stage>canvas{display:block;position:absolute;inset:0;cursor:grab}
+#stage>canvas:active{cursor:grabbing}
+#labels{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.lb{position:absolute;left:0;top:0;white-space:nowrap;font:500 10px var(--font);letter-spacing:.12em;text-transform:uppercase;text-shadow:0 0 3px #000,0 0 6px #000a;will-change:transform}
+.lb.c{color:#fff;font-size:12px;font-weight:700;letter-spacing:.18em}
+.lb.o{color:#c5dcff;font-size:12px;font-weight:400;letter-spacing:.3em}
+.lb.s{color:#e8f0ff;font-weight:400}
+.lb.l{color:#dff3ff;font-weight:400;font-size:9px}
+.lb.k{text-transform:none;font-style:italic;letter-spacing:.03em;font-size:10.5px;font-weight:500}
+.lb.k.w{color:#ffd9cf}
+.lb.k.c{color:#c4ecff}
+.lb.q{text-transform:none;letter-spacing:.02em;font-size:10.5px;font-weight:700}
+.lb.q.leo{color:#ffd24a}.lb.q.meo{color:#d5b5ff}.lb.q.geo{color:#6ff0b8}.lb.q.swm{color:#f1f4ff}
+#orbList i{box-shadow:0 0 0 1px var(--line-strong)}
+#orbList{list-style:none;margin:8px 0 0;padding:0;font-size:.76rem;line-height:1.7}
+#orbList i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:7px}
+#orbList b{color:var(--title);margin-right:4px}
+.card{background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:0}
+#readout{position:absolute;left:10px;top:10px;max-width:calc(100% - 20px);padding:8px 12px;font-size:.78rem;line-height:1.45;display:flex;flex-direction:column;border-left:4px solid var(--blue)}
+#readout b{color:var(--title);font-weight:700}
+#readout .n{color:var(--blue)}
+#hud{position:absolute;right:10px;bottom:10px;padding:8px 10px;font-size:.72rem;width:200px}
+#hud canvas{width:100%;height:10px;display:block;margin:5px 0 3px}
+#hud .tk{display:flex;justify-content:space-between;font-size:.66rem}
+#ck{display:flex;gap:10px;margin-top:6px;font-size:.66rem;align-items:center}
+#ck i{display:inline-block;width:14px;height:5px;margin-right:4px;vertical-align:middle}
+#ck .w{background:#ff5a36}#ck .c{background:#56c8ff}
+.sub{font-size:.76rem;line-height:1.55;margin:8px 0 0}
+.sub:empty{display:none}
+#hud .alt{margin-top:5px;color:var(--title);font-weight:700}
+#main{flex:1;min-height:0;display:flex;flex-direction:column}
+#panel{display:none;flex:none;max-height:56%;overflow:auto;background:var(--bg);border-top:1px solid var(--line);padding:16px}
+body.open #panel{display:block}
+#panel h3{font:700 .75rem var(--font);text-transform:uppercase;letter-spacing:.06em;color:var(--title);margin:16px 0 6px}
+#panel h3:first-child{margin-top:0}
+.seg{display:flex;border:1px solid var(--blue)}
+.seg button{flex:1;font:500 .8rem var(--font);padding:8px 4px;border:0;border-right:1px solid var(--blue);background:var(--bg);color:var(--blue);cursor:pointer}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed=true]{background:var(--blue);color:var(--on-blue)}
+.row{display:flex;align-items:center;gap:10px}
+input[type=range]{flex:1;accent-color:var(--blue)}
+#exagOut{font-weight:700;color:var(--title);min-width:64px;text-align:right}
+.chk{display:flex;flex-wrap:wrap;gap:6px 18px}
+.chk label{display:flex;align-items:center;gap:6px;cursor:pointer}
+.chk input{accent-color:var(--blue);width:16px;height:16px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button{font:500 .78rem var(--font);background:transparent;color:var(--blue);border:1px solid var(--blue);padding:6px 10px;cursor:pointer}
+.chips button:hover{background:var(--blue);color:var(--on-blue)}
+.note{font-size:.72rem;line-height:1.6;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+/* display settings modal */
+#dlg{position:fixed;inset:0;background:#000a;display:none;align-items:center;justify-content:center;z-index:20;padding:16px}
+#dlg.on{display:flex}
+#dlg .box{width:100%;max-width:420px;padding:20px}
+#dlg h2{margin:0 0 4px;font-size:1.1rem;color:var(--title)}
+#dlg fieldset{border:0;padding:0;margin:14px 0 18px;display:grid;gap:8px}
+#dlg label{display:flex;gap:10px;align-items:center;border:1px solid var(--line);padding:10px 12px;cursor:pointer}
+#dlg label:has(input:checked){border-color:var(--blue);box-shadow:inset 0 0 0 1px var(--blue)}
+#dlg input{accent-color:var(--blue)}
+@media(max-width:759px){body.open #hud{display:none}}
+@media(min-width:760px){#main{flex-direction:row}#panel{width:350px;max-height:none;border-top:0;border-left:1px solid var(--line)}#hud{right:auto;left:10px}}
+</style>
+</head>
+<body>
+<div class="util"><button id="dispBtn" aria-haspopup="dialog"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 3v18" /><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg>Display settings</button></div>
+<header>
+<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><ellipse cx="12" cy="12" rx="4" ry="9.5"/><path d="M2.5 12h19M4 7.5h16M4 16.5h16"/></svg>
+<div class="brand"><b>Earth, 3D</b><span>Geoid · currents · El Niño / La Niña · orbits</span></div>
+<button class="btn" id="panelBtn" aria-label="Controls">Controls</button>
+</header>
+<div id="main">
+<div id="stage">
+<div id="labels"></div>
+<div id="readout" class="card"><b>Tap or hover the globe</b><span>to read the geoid height at that point</span></div>
+<div id="hud" class="card"><div id="legT">Geoid height (EGM96)</div><canvas id="legend" width="176" height="10"></canvas><div class="tk"><span id="lowTxt"></span><span>0</span><span id="highTxt"></span></div><div id="ck"><span><i class="w"></i>warm current</span><span><i class="c"></i>cold current</span></div><div class="alt">Altitude <span id="alt"></span></div></div>
+
+</div>
+<aside id="panel">
+<h3>Surface</h3>
+<div class="seg" id="modeSeg"><button data-v="geoid" aria-pressed="true">Geoid</button><button data-v="land" aria-pressed="false">Land &amp; sea</button><button data-v="blend" aria-pressed="false">Blend</button></div>
+<h3>El Niño / La Niña</h3>
+<div class="seg" id="ensoSeg"><button data-v="off" aria-pressed="true">Off</button><button data-v="en" aria-pressed="false">El Niño</button><button data-v="ln" aria-pressed="false">La Niña</button></div>
+<p class="sub" id="ensoTxt"></p>
+<h3>Satellite orbits</h3>
+<div class="chk"><label><input type="checkbox" id="leo" checked>LEO</label><label><input type="checkbox" id="meo" checked>MEO</label><label><input type="checkbox" id="geo" checked>Geostationary</label><label><input type="checkbox" id="swm" checked>Swarms</label></div>
+<ul id="orbList"></ul>
+<h3>Geoid relief exaggeration</h3>
+<div class="row"><input id="exag" type="range" min="0" max="4.3" step="0.05" value="3.4" aria-label="Exaggeration"><span id="exagOut"></span></div>
+<h3>Flattening of the ellipsoid</h3>
+<div class="seg" id="flatSeg"><button data-v="1" aria-pressed="true">True</button><button data-v="10" aria-pressed="false">×10</button><button data-v="30" aria-pressed="false">×30</button><button data-v="sphere" aria-pressed="false">Sphere</button></div>
+<h3>Overlays</h3>
+<div class="chk"><label><input type="checkbox" id="cur" checked>Sea currents</label><label><input type="checkbox" id="coast" checked>Coasts &amp; lakes</label><label><input type="checkbox" id="borders">Borders</label><label><input type="checkbox" id="grid">30° grid</label><label><input type="checkbox" id="lab" checked>Labels</label><label><input type="checkbox" id="spin" checked>Auto-rotate</label></div>
+<h3>Fly to</h3>
+<div class="chips"><button data-go="low">Geoid low</button><button data-go="high">Geoid high</button><button data-go="atl">N Atlantic</button><button data-go="eur">Europe</button><button data-go="gl">Great Lakes</button><button data-go="orb">All orbits</button><button data-go="reset">Reset</button></div>
+<p class="note">Surface = WGS84 ellipsoid pushed in or out by the EGM96 geoid height (15′ grid, about 28 km). The real geoid spans only −107 m to +85 m, so relief is exaggerated by the factor shown. Coasts, borders and lakes: Natural Earth 1:50m. The geoid is a physical model of mean sea level, not a map of the seabed.<br>Sea currents: simplified average paths of the main surface currents, drawn by hand; they are not measured flow. In the El Niño and La Niña views the two equatorial Pacific currents are slowed or sped up as an illustration.<br>El Niño / La Niña: measured sea-surface temperature compared with the 1991–2020 average for the same months (NOAA ERSSTv5, 2° grid).<br>Satellite orbits: altitudes and inclinations are to scale with the Earth, and time runs 600 times faster. The Earth does not turn in this view, so the rings stay fixed: in reality the ground track of a LEO or MEO satellite shifts west on each orbit, while a geostationary satellite stays above the same point. Satellite positions along each ring are illustrative, not live.<br>Swarms: each Starlink, OneWeb and Planet dot stands for roughly four satellites, spread evenly over the shell as an illustration; the split between Starlink shells is approximate. The 25 Kinéis nanosatellites are all shown.</p>
+</aside>
+</div>
+<div id="dlg" role="dialog" aria-modal="true" aria-labelledby="dlgT"><div class="box card">
+<h2 id="dlgT">Display settings</h2><div>Choose a theme to customise the appearance of the page.</div>
+<fieldset><label><input type="radio" name="th" value="light">Light theme</label><label><input type="radio" name="th" value="dark">Dark theme</label><label><input type="radio" name="th" value="system" checked>System</label></fieldset>
+<button class="btn" id="dlgClose">Close</button></div></div>
+<script>
+(function(){var mq=matchMedia('(prefers-color-scheme: dark)'),cur='system';
+function apply(){document.documentElement.setAttribute('data-theme',cur==='system'?(mq.matches?'dark':'light'):cur)}
+try{cur=localStorage.getItem('earth-theme')||'system'}catch(e){}
+document.querySelectorAll('input[name=th]').forEach(function(r){r.checked=r.value===cur;r.onchange=function(){cur=r.value;try{localStorage.setItem('earth-theme',cur)}catch(e){}apply()}});
+mq.addEventListener&&mq.addEventListener('change',apply);apply();
+var d=document.getElementById('dlg');document.getElementById('dispBtn').onclick=function(){d.classList.add('on')};
+document.getElementById('dlgClose').onclick=function(){d.classList.remove('on')};d.onclick=function(e){if(e.target===d)d.classList.remove('on')};
+})();
+</script>
+<script>__BUNDLE__</script>
+</body>
+</html>

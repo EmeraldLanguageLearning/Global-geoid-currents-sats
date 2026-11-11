@@ -441,7 +441,7 @@ function updateSatLabels(d) {
 }
 
 /* ---------- altitude-based zoom ---------- */
-function fitAlt() { const a = Math.min(1, camera.aspect), half = Math.atan(Math.tan((camera.fov / 2) * D2R) * a); return 1.18 / Math.sin(half) - 1; }
+function fitAlt() { const a = Math.min(1, camera.aspect > 0 ? camera.aspect : 1), half = Math.atan(Math.tan((camera.fov / 2) * D2R) * a); return 1.18 / Math.sin(half) - 1; }
 const hMaxUnits = () => hUnits(EXT.max);
 const minAlt = () => Math.max(0.0015, hMaxUnits() + 0.0015);
 function setAlt(alt) {
@@ -552,7 +552,8 @@ document.querySelectorAll('[data-go]').forEach(b => b.onclick = () => jumps[b.da
 $('panelBtn').onclick = () => document.body.classList.toggle('open');
 
 /* ---------- resize / loop ---------- */
-function resize() { const w = stage.clientWidth, h = stage.clientHeight; renderer.setSize(w, h, false); renderer.domElement.style.width = w + 'px'; renderer.domElement.style.height = h + 'px'; camera.aspect = w / h; camera.updateProjectionMatrix(); }
+let sized = false;
+function resize() { const w = stage.clientWidth, h = stage.clientHeight; if (!w || !h) return; renderer.setSize(w, h, false); renderer.domElement.style.width = w + 'px'; renderer.domElement.style.height = h + 'px'; camera.aspect = w / h; camera.updateProjectionMatrix(); if (!sized) { sized = true; camera.position.setLength(1 + fitAlt()); } }
 addEventListener('resize', resize); resize();
 if (window.ResizeObserver) new ResizeObserver(resize).observe(stage);
 

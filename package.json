@@ -1,0 +1,25 @@
+{
+  "name": "earth-3d",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Zoomable 3D Earth: EGM96 geoid, sea currents, El Niño / La Niña, satellite orbits and swarms",
+  "scripts": {
+    "build": "node tools/build.mjs",
+    "prep:geoid": "node tools/prep.mjs",
+    "android": "npm run build && (test -d android || npx cap add android) && npx cap sync android"
+  },
+  "engines": { "node": ">=22" },
+  "dependencies": {
+    "@capacitor/android": "^8.6.0",
+    "@capacitor/cli": "^8.6.0",
+    "@capacitor/core": "^8.6.0",
+    "three": "^0.187.0",
+    "topojson-client": "^3.1.0",
+    "world-atlas": "^2.0.2"
+  },
+  "devDependencies": {
+    "egm96-universal": "^1.1.1",
+    "esbuild": "^0.28.2"
+  }
+}

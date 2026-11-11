@@ -1,0 +1,45 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: npm ci
+      - run: npm run build
+      - name: Create the Android project
+        run: |
+          npx cap add android
+          npx cap sync android
+      - name: Build the APK
+        working-directory: android
+        run: ./gradlew assembleDebug --no-daemon
+      - name: Rename the APK
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk earth-3d.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: earth-3d-apk
+          path: earth-3d.apk
+      - name: Publish a release with the APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >
+          gh release create "build-${{ github.run_number }}" earth-3d.apk
+          --title "Earth 3D build ${{ github.run_number }}"
+          --notes "Debug APK built from ${{ github.sha }}. Uninstall any older build before installing this one."
